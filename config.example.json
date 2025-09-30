@@ -1,0 +1,10 @@
+{
+  "panel_url": "https://panel.example.com",
+  "username": "admin",
+  "password": "strong-password",
+  "telegram_bot_token": "123456789:ABCDEF_your_token_here",
+  "admin_chat_ids": [123456789],
+  "cron_spec": "0 * * * *",
+  "insecure_skip_verify": false,
+  "request_timeout_seconds": 15
+}
