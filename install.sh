@@ -3,6 +3,7 @@ set -e
 
 echo "=== Independent 3x-ui Telegram Bot Installer ==="
 
+# --- Ask user for input ---
 read -p "Enter Panel URL (e.g. https://panel.example.com): " PANEL_URL
 read -p "Enter Panel Username: " PANEL_USERNAME
 read -s -p "Enter Panel Password: " PANEL_PASSWORD
@@ -12,18 +13,24 @@ read -p "Enter Admin Telegram Chat ID (numeric): " ADMIN_CHAT_ID
 read -p "Enter cron spec for periodic status (default: 0 * * * *): " CRON_SPEC
 CRON_SPEC=${CRON_SPEC:-"0 * * * *"}
 
+# --- Install dependencies ---
+echo "[*] Installing dependencies..."
 sudo apt update -y
-sudo apt install -y git golang-go build-essential
+sudo apt install -y git golang-go build-essential -y
 
-INSTALL_DIR="/opt/threexui-bot"
+# --- Prepare install dir ---
+INSTALL_DIR="/opt/3x-ui/bot-controler"
 sudo rm -rf $INSTALL_DIR
 sudo mkdir -p $INSTALL_DIR
 sudo chown $USER:$USER $INSTALL_DIR
 cd $INSTALL_DIR
 
-cp ~/threexui-bot/main.go ./main.go
-cp ~/threexui-bot/go.mod ./go.mod
+# --- Copy project files (assuming install.sh is in the repo root) ---
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cp $SCRIPT_DIR/main.go ./main.go
+cp $SCRIPT_DIR/go.mod ./go.mod
 
+# --- Create config.json ---
 cat > config.json <<EOF
 {
   "panel_url": "$PANEL_URL",
@@ -37,12 +44,18 @@ cat > config.json <<EOF
 }
 EOF
 
+echo "[*] Config file created at $INSTALL_DIR/config.json"
+
+# --- Build the bot ---
+echo "[*] Building bot binary..."
 go mod tidy
 go build -o threexui-bot main.go
 
+# --- Install binary + config ---
 sudo cp threexui-bot /usr/local/bin/threexui-bot
 sudo cp config.json /etc/threexui-bot-config.json
 
+# --- Create systemd service ---
 SERVICE_FILE="/etc/systemd/system/threexui-bot.service"
 sudo bash -c "cat > $SERVICE_FILE" <<EOL
 [Unit]
@@ -52,7 +65,7 @@ Wants=network-online.target
 
 [Service]
 ExecStart=/usr/local/bin/threexui-bot /etc/threexui-bot-config.json
-WorkingDirectory=/opt/threexui-bot
+WorkingDirectory=$INSTALL_DIR
 Restart=always
 RestartSec=5
 User=$USER
@@ -61,9 +74,12 @@ User=$USER
 WantedBy=multi-user.target
 EOL
 
+# --- Enable and start service ---
+echo "[*] Enabling and starting service..."
 sudo systemctl daemon-reload
 sudo systemctl enable threexui-bot
 sudo systemctl restart threexui-bot
 
 echo "=== Installation complete! ==="
-echo "Check logs with: sudo journalctl -u threexui-bot -f"
+echo "Check logs with:"
+echo "  sudo journalctl -u threexui-bot -f"
