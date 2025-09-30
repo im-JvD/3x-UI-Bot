@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "=== Independent 3x-ui Telegram Bot Installer (v1 0.0) ==="
+echo "=== Independent 3x-ui Telegram Bot Installer (v1 0.1) ==="
 
 # --- Ask user for input ---
 read -p "Enter Panel URL (e.g. https://panel.example.com): " PANEL_URL
