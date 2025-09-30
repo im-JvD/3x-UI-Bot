@@ -21,14 +21,14 @@ sudo apt install -y git golang-go build-essential -y
 # --- Prepare install dir ---
 INSTALL_DIR="/opt/3x-ui/bot-controler"
 sudo rm -rf $INSTALL_DIR
-sudo mkdir -p $INSTALL_DIR
-sudo chown $USER:$USER $INSTALL_DIR
-cd $INSTALL_DIR
+sudo mkdir -p $(dirname $INSTALL_DIR)
+cd $(dirname $INSTALL_DIR)
 
-# --- Copy project files (assuming install.sh is in the repo root) ---
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cp $SCRIPT_DIR/main.go ./main.go
-cp $SCRIPT_DIR/go.mod ./go.mod
+# --- Clone repo directly into install dir ---
+echo "[*] Cloning repository..."
+git clone https://github.com/im-JvD/3x-UI-Bot.git $INSTALL_DIR
+
+cd $INSTALL_DIR
 
 # --- Create config.json ---
 cat > config.json <<EOF
